@@ -90,6 +90,12 @@
 .tour-peeking .tour-dimp { opacity: 0 !important; pointer-events: none !important; }
 .tour-peeking .tour-ring { opacity: 0 !important; }
 .tour-peeking .tour-narrator { display: none !important; }   /* only the Resume pill remains */
+/* while peeking, the Resume pill glows in the screen's bottom-right corner so it's easy to find */
+.tour-peeking .tour-peek { animation: tour-peek-glow 1.5s ease-in-out infinite; }
+@keyframes tour-peek-glow {
+  0%, 100% { box-shadow: 0 6px 20px rgba(45, 212, 191, 0.55); }
+  50%      { box-shadow: 0 6px 28px rgba(45, 212, 191, 0.92), 0 0 0 6px rgba(45, 212, 191, 0.18); }
+}
 
 @media (max-width: 560px) {
   .tour-avatar { width: 60px; height: 60px; }

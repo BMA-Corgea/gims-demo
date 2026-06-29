@@ -394,6 +394,12 @@
     if (this.btnPeek) {
       this.btnPeek.textContent = this.peeking ? "▸ Resume tour" : "View page";
       this.btnPeek.classList.toggle("tour-primary", this.peeking);
+      if (this.peeking) {
+        // the bubble is hidden while peeking — park the glowing Resume pill in the screen's
+        // bottom-right corner (un-peek re-pins it to the bubble via _positionPeek).
+        this.btnPeek.style.left = "auto"; this.btnPeek.style.top = "auto";
+        this.btnPeek.style.right = "16px"; this.btnPeek.style.bottom = "16px";
+      }
     }
     if (!this.peeking && !quiet) {
       // returning from peek: bring the target back into view and re-measure the spotlight
