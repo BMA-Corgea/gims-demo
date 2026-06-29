@@ -323,24 +323,50 @@
   Tour.prototype._placeNarrator = function (rect, placement) {
     var n = this.narr, vw = window.innerWidth, vh = window.innerHeight, margin = 14, gap = 16;
     n.style.maxWidth = Math.min(360, vw - 2 * margin) + "px";
-    var nb = n.getBoundingClientRect(), nw = nb.width || 320, nh = nb.height || 160, left, top, p = placement || "auto";
+    var nb = n.getBoundingClientRect(), nw = nb.width || 320, nh = nb.height || 160;
+    var p = placement || "auto";
+
     if (!rect || p === "center") {
-      left = (vw - nw) / 2; top = (vh - nh) / 2;
-    } else {
-      if (p === "auto") {
-        if (rect.bottom + gap + nh <= vh) p = "bottom";
-        else if (rect.top - gap - nh >= 0) p = "top";
-        else if (rect.right + gap + nw <= vw) p = "right";
-        else p = "left";
-      }
-      if (p === "bottom") { top = rect.bottom + gap; left = rect.left + rect.width / 2 - nw / 2; }
-      else if (p === "top") { top = rect.top - gap - nh; left = rect.left + rect.width / 2 - nw / 2; }
-      else if (p === "right") { left = rect.right + gap; top = rect.top + rect.height / 2 - nh / 2; }
-      else { left = rect.left - gap - nw; top = rect.top + rect.height / 2 - nh / 2; }
+      n.style.left = Math.max(margin, Math.min((vw - nw) / 2, vw - nw - margin)) + "px";
+      n.style.top = Math.max(margin, Math.min((vh - nh) / 2, vh - nh - margin)) + "px";
+      return;
     }
-    left = Math.max(margin, Math.min(left, vw - nw - margin));
-    top = Math.max(margin, Math.min(top, vh - nh - margin));
-    n.style.left = left + "px"; n.style.top = top + "px";
+
+    function posFor(side) {
+      if (side === "bottom") return { left: rect.left + rect.width / 2 - nw / 2, top: rect.bottom + gap };
+      if (side === "top")    return { left: rect.left + rect.width / 2 - nw / 2, top: rect.top - gap - nh };
+      if (side === "right")  return { left: rect.right + gap, top: rect.top + rect.height / 2 - nh / 2 };
+      return { left: rect.left - gap - nw, top: rect.top + rect.height / 2 - nh / 2 };  // left
+    }
+    function clamp(q) {
+      return { left: Math.max(margin, Math.min(q.left, vw - nw - margin)),
+               top: Math.max(margin, Math.min(q.top, vh - nh - margin)) };
+    }
+    // Does the narrator (gnome + bubble) at clamped position c cover the spotlighted rect? A small
+    // buffer keeps it clear of the highlight ring too.
+    function covers(c) {
+      var pad = 8;
+      return c.left < rect.right + pad && c.left + nw > rect.left - pad &&
+             c.top < rect.bottom + pad && c.top + nh > rect.top - pad;
+    }
+
+    // Try the requested side first, then the auto-preference order; take the first placement that,
+    // AFTER clamping to the viewport, does NOT cover the target — so the gnome can never sit over the
+    // control it's pointing at (which happened when a requested side had no room and got clamped back
+    // onto the target).
+    var order = [];
+    if (p !== "auto") order.push(p);
+    ["bottom", "top", "right", "left"].forEach(function (s) { if (order.indexOf(s) < 0) order.push(s); });
+
+    var pick = null;
+    for (var i = 0; i < order.length; i++) {
+      var c = clamp(posFor(order[i]));
+      if (!covers(c)) { pick = c; break; }
+    }
+    if (!pick) pick = clamp(posFor("bottom"));   // degenerate (tiny viewport): least-bad fallback
+
+    n.style.left = pick.left + "px";
+    n.style.top = pick.top + "px";
   };
 
   Tour.prototype._attachAdvance = function (step, target) {
