@@ -130,7 +130,7 @@
       beforeShow: async function () { await waitFor(function () { return optionExists(aeNoun(), "Sample"); }); setReactValue(aeNoun(), "Sample"); } },
     { target: function () { return aeRegRow("hold_clock"); }, placement: "top", title: "3 · Make it a Duration",
       html: "In <b>Register new adjective</b>, I'll set <b>hold_clock</b>'s class to <b>Duration</b>.",
-      beforeShow: async function () { await waitFor(function () { return aeRegRow("hold_clock"); }); setReactValue(aeRegRow("hold_clock").querySelector(".ae-register-class"), "Duration"); } },
+      beforeShow: async function () { var row = await waitFor(function () { return aeRegRow("hold_clock"); }); var sel = row && row.querySelector(".ae-register-class"); if (sel) setReactValue(sel, "Duration"); } },
     { target: function () { return $(".ae-detail-panel") || $(".ae-detail"); }, placement: "left", title: "4 · Register it",
       html: "I'll click <b>Register</b> — <b>hold_clock</b> becomes a Duration adjective and its clock config opens here.",
       beforeShow: async function () {
@@ -163,7 +163,11 @@
     if (!f) return;
     if (!f.received_at) f.received_at = { type: "datetime", required: true };
     if (!f.due_at)      f.due_at = { type: "datetime", required: true };
-    if (!f.hold_clock)  f.hold_clock = { type: "string", required: true };
+    // hold_clock must start as a PLAIN field so the Register flow works on REPLAY — a prior run of
+    // this chapter may have already promoted it to a Duration adjective (so it'd be gone from the
+    // "Register new adjective" list). Reset it.
+    f.hold_clock = { type: "string", required: true };
+    if (s.adjectives["Demo Lab"]) delete s.adjectives["Demo Lab"].hold_clock;
     window.GimsMock.save();
   }
 

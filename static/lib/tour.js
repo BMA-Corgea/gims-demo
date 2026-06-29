@@ -232,6 +232,7 @@
     else this.elText.textContent = step.text || "";
 
     Promise.resolve(step.beforeShow ? step.beforeShow(this._api()) : null)
+      .catch(function () { /* a failing beforeShow must not freeze the tour on the old spotlight */ })
       .then(function () { return resolve(step.target); })
       .then(function (target) {
         if (self.dead || self.i !== idx) return;
@@ -365,7 +366,13 @@
       var c = clamp(posFor(order[i]));
       if (!covers(c)) { pick = c; break; }
     }
-    if (!pick) pick = clamp(posFor("bottom"));   // degenerate (tiny viewport): least-bad fallback
+    if (!pick) {
+      // No side clears the target — drop the narrator into a corner: bottom-right first (out of the
+      // way, where the View-page pill sits), then top-left if that still overlaps.
+      var br = { left: vw - nw - margin, top: vh - nh - margin };
+      var tl = { left: margin, top: margin };
+      pick = !covers(br) ? br : (!covers(tl) ? tl : br);
+    }
 
     n.style.left = pick.left + "px";
     n.style.top = pick.top + "px";
