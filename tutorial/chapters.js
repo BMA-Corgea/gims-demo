@@ -12,7 +12,7 @@
 (function () {
   "use strict";
 
-  var NARRATOR = { image: "/static/images/gnome.png", name: "GIMS Gnome" };
+  var NARRATOR = { image: "/static/images/gnome-tour.png", name: "GIMS Gnome" };
   var THEME = { dim: "rgba(3, 12, 9, 0.78)", ring: "#2dd4bf" };
 
   // ── tiny DOM helpers (React-aware) ─────────────────────────────────────────────────────────────
