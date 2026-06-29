@@ -45,7 +45,7 @@
     return false;
   }
   function waitFor(fn, timeout) {
-    timeout = timeout || 6000;
+    timeout = timeout || 2500;   // fail fast — a hook that waits forever feels like a freeze
     return new Promise(function (resolve) {
       var t0 = Date.now();
       (function poll() {
@@ -130,7 +130,23 @@
       beforeShow: async function () { await waitFor(function () { return optionExists(aeNoun(), "Sample"); }); setReactValue(aeNoun(), "Sample"); } },
     { target: function () { return aeRegRow("hold_clock"); }, placement: "top", title: "3 · Make it a Duration",
       html: "In <b>Register new adjective</b>, I'll set <b>hold_clock</b>'s class to <b>Duration</b>.",
-      beforeShow: async function () { var row = await waitFor(function () { return aeRegRow("hold_clock"); }); var sel = row && row.querySelector(".ae-register-class"); if (sel) setReactValue(sel, "Duration"); } },
+      beforeShow: async function () {
+        // Reversible: if a forward pass already promoted hold_clock, demote it back so this step has
+        // its "Register new adjective" row to point at (otherwise stepping Back here would hang
+        // waiting for a row that's gone).
+        if (window.GimsMock) {
+          var s = window.GimsMock.store(), nf = s.nouns["Demo Lab"].Sample.fields;
+          if (nf.hold_clock && nf.hold_clock.type === "adjective") {
+            nf.hold_clock = { type: "string", required: true };
+            if (s.adjectives["Demo Lab"]) delete s.adjectives["Demo Lab"].hold_clock;
+            window.GimsMock.save();
+            var rb = document.getElementById("refresh"); if (rb) rb.click();
+          }
+        }
+        var row = await waitFor(function () { return aeRegRow("hold_clock"); }, 3000);
+        var sel = row && row.querySelector(".ae-register-class");
+        if (sel) setReactValue(sel, "Duration");
+      } },
     { target: function () { return $(".ae-detail-panel") || $(".ae-detail"); }, placement: "left", title: "4 · Register it",
       html: "I'll click <b>Register</b> — <b>hold_clock</b> becomes a Duration adjective and its clock config opens here.",
       beforeShow: async function () {
