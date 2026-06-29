@@ -141,6 +141,7 @@
         '<div class="tour-text"></div>' +
         '<div class="tour-foot">' +
           '<span class="tour-progress"></span>' +
+          '<button type="button" class="tour-btn tour-peek" title="Hide the spotlight to see and scroll the whole page, then resume">View page</button>' +
           '<span class="tour-grow"></span>' +
           '<button type="button" class="tour-btn tour-skip">Skip</button>' +
           '<button type="button" class="tour-btn tour-back">Back</button>' +
@@ -159,10 +160,12 @@
     this.btnNext = narr.querySelector(".tour-next");
     this.btnBack = narr.querySelector(".tour-back");
     this.btnSkip = narr.querySelector(".tour-skip");
+    this.btnPeek = narr.querySelector(".tour-peek");
 
     this.btnNext.addEventListener("click", function () { self.next(); });
     this.btnBack.addEventListener("click", function () { self.back(); });
     this.btnSkip.addEventListener("click", function () { self.skip(); });
+    this.btnPeek.addEventListener("click", function () { self.togglePeek(); });
 
     this._onReflow = function () { self._reposition(); };
     window.addEventListener("resize", this._onReflow, { passive: true });
@@ -196,6 +199,7 @@
 
     this._unraise();
     this._detachAdvance();
+    this._setPeek(false, true);   // each step starts with the spotlight on
 
     this.btnBack.style.visibility = idx === 0 ? "hidden" : "visible";
     this.btnNext.textContent = idx === this.steps.length - 1 ? this.cfg.finishLabel : "Next";
@@ -352,6 +356,26 @@
     this.styled.forEach(function (s) { s.el.style[s.prop] = s.prev; });
     this.styled = [];
   };
+
+  // Peek / "view the whole page": fade the dim + ring and collapse the narrator to a small
+  // "Resume tour" pill, so the visitor can see and scroll the real page in context, then snap back
+  // to the current step. Reset automatically on every step change.
+  Tour.prototype._setPeek = function (on, quiet) {
+    this.peeking = !!on;
+    if (!this.root) return;
+    this.root.classList.toggle("tour-peeking", this.peeking);
+    if (this.btnPeek) {
+      this.btnPeek.textContent = this.peeking ? "▸ Resume tour" : "View page";
+      this.btnPeek.classList.toggle("tour-primary", this.peeking);
+    }
+    if (!this.peeking && !quiet) {
+      // returning from peek: bring the target back into view and re-measure the spotlight
+      var self = this, t = this.curTarget;
+      if (t) { try { t.scrollIntoView({ block: "center", inline: "center", behavior: "smooth" }); } catch (e) {} }
+      setTimeout(function () { self._reposition(); }, 80);
+    }
+  };
+  Tour.prototype.togglePeek = function () { this._setPeek(!this.peeking); };
 
   Tour.prototype._api = function () {
     var self = this;

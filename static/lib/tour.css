@@ -76,6 +76,34 @@
 }
 .tour-primary:hover { box-shadow: 0 6px 22px var(--blue-glow, rgba(79, 157, 255, 0.55)); }
 
+/* ── Peek / "view the whole page" mode ──────────────────────────────────────
+   The visitor hides the spotlight to see + scroll the real page in context. The
+   dim fades and stops blocking; the narrator collapses to a small "Resume tour"
+   pill in the corner. Toggled by the .tour-peek button (engine adds .tour-peeking). */
+.tour-peek { color: var(--text-soft, #6f988b); }
+.tour-peek:hover { color: var(--text, #fff); }
+
+.tour-peeking .tour-dimp { opacity: 0 !important; pointer-events: none !important; }
+.tour-peeking .tour-ring { opacity: 0 !important; }
+.tour-peeking .tour-narrator {
+  left: auto !important; top: auto !important; right: 16px !important; bottom: 16px !important;
+  filter: drop-shadow(0 10px 26px rgba(2, 14, 11, 0.55));
+}
+.tour-peeking .tour-avatar { display: none !important; }
+.tour-peeking .tour-bubble {
+  background: none !important; border: none !important; box-shadow: none !important;
+  padding: 0 !important; min-width: 0 !important;
+}
+.tour-peeking .tour-title,
+.tour-peeking .tour-text,
+.tour-peeking .tour-progress,
+.tour-peeking .tour-grow,
+.tour-peeking .tour-skip,
+.tour-peeking .tour-back,
+.tour-peeking .tour-next { display: none !important; }
+.tour-peeking .tour-foot { margin: 0 !important; }
+.tour-peeking .tour-peek { padding: 9px 16px; box-shadow: 0 8px 24px rgba(2, 14, 11, 0.5); }
+
 @media (max-width: 560px) {
   .tour-avatar { width: 60px; height: 60px; }
   .tour-bubble { min-width: 0; }
