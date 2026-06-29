@@ -131,11 +131,15 @@
     { target: function () { return aeRegRow("hold_clock"); }, placement: "top", title: "3 · Make it a Duration",
       html: "In <b>Register new adjective</b>, I'll set <b>hold_clock</b>'s class to <b>Duration</b>.",
       beforeShow: async function () { await waitFor(function () { return aeRegRow("hold_clock"); }); setReactValue(aeRegRow("hold_clock").querySelector(".ae-register-class"), "Duration"); } },
-    { target: function () { var r = aeRegRow("hold_clock"); return r && r.querySelector("button"); }, placement: "left", title: "4 · Register",
-      html: "Click <b>Register</b> to promote it to an adjective.",
-      advanceOn: "target-click", advanceDelay: 800 },
+    { target: function () { return $(".ae-detail-panel") || $(".ae-detail"); }, placement: "left", title: "4 · Register it",
+      html: "I'll click <b>Register</b> — <b>hold_clock</b> becomes a Duration adjective and its clock config opens here.",
+      beforeShow: async function () {
+        var r = aeRegRow("hold_clock"), b = r && r.querySelector("button");
+        if (b) b.click();
+        await waitFor(function () { return aeDurSelects().length >= 2; }, 8000);
+      } },
     { target: function () { return aeDurSelects()[0]; }, placement: "right", title: "5 · Start = received_at",
-      html: "Now configure the clock. The <b>start</b> anchor — when it arrived: <b>received_at</b>.",
+      html: "The <b>start</b> anchor — when it arrived: <b>received_at</b>.",
       beforeShow: async function () { await waitFor(function () { return aeDurSelects().length >= 2; }); setReactValue(aeDurSelects()[0], "received_at"); } },
     { target: function () { return aeDurSelects()[1]; }, placement: "right", title: "6 · End = due_at",
       html: "The <b>end</b> anchor — the deadline: <b>due_at</b>.",
@@ -144,8 +148,8 @@
       html: "<b>Mode</b>: show both <i>elapsed</i> and <i>remaining</i> (“3h in · 2d left”).",
       beforeShow: function () { setReactValue(aeDurSelects()[2], "both"); } },
     { target: aeSaveBtn, placement: "top", title: "8 · Save the binding",
-      html: "Save it.",
-      advanceOn: "target-click", advanceDelay: 800 },
+      html: "And I'll <b>Save</b> the binding.",
+      beforeShow: function () { var b = aeSaveBtn(); if (b) b.click(); } },
     { target: null, placement: "center", title: "Live clock wired ✅",
       html: "<b>hold_clock</b> now ticks from <b>received_at</b> to <b>due_at</b>. Next: a <b>verb</b> — an action you run on a Sample." },
   ];

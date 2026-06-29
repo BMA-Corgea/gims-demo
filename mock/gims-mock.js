@@ -186,7 +186,7 @@
     var body = null;
     if (init && init.body && typeof init.body === "string") { try { body = JSON.parse(init.body); } catch (e) { body = init.body; } }
     var q = Object.fromEntries(u.searchParams);
-    var delay = 50 + (Math.random() * 110 | 0);
+    var delay = 14 + (Math.random() * 26 | 0);   // a touch of realism, but snappy (multi-fetch reloads add up)
     return new Promise(function (resolve) {
       setTimeout(function () {
         try { resolve(hit.fn(hit.m, q, body)); }

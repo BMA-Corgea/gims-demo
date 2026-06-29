@@ -223,6 +223,13 @@
     var manualAdvance = !step.advanceOn || step.advanceOn === "next";
     this.btnNext.style.display = manualAdvance ? "" : "none";
     this.elProg.textContent = (idx + 1) + " / " + this.steps.length;
+    // Show this step's text NOW (before beforeShow runs), so a beforeShow that waits for the page to
+    // catch up — promoting a field, a panel loading in — never leaves the bubble showing the previous
+    // step's text. The spotlight still lands once the target resolves below.
+    this.elTitle.textContent = step.title || "";
+    this.elTitle.style.display = step.title ? "" : "none";
+    if (step.html != null) this.elText.innerHTML = step.html;
+    else this.elText.textContent = step.text || "";
 
     Promise.resolve(step.beforeShow ? step.beforeShow(this._api()) : null)
       .then(function () { return resolve(step.target); })
@@ -254,11 +261,6 @@
         if (target) {
           try { target.scrollIntoView({ block: "center", inline: "center", behavior: "smooth" }); } catch (e) {}
         }
-
-        self.elTitle.textContent = step.title || "";
-        self.elTitle.style.display = step.title ? "" : "none";
-        if (step.html != null) self.elText.innerHTML = step.html;
-        else self.elText.textContent = step.text || "";
 
         setTimeout(function () {
           if (self.dead || self.i !== idx) return;
