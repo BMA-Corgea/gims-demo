@@ -170,6 +170,98 @@
       html: "<b>hold_clock</b> now ticks from <b>received_at</b> to <b>due_at</b>. Next: a <b>verb</b> — an action you run on a Sample." },
   ];
 
+  // ── verb_editor chapter ─────────────────────────────────────────────────────────────────────
+  function veProj() { return document.getElementById("project"); }
+  function veNewVerbBtn() { return byText(".rw-toolbar button, .ve-toolbar button, #verb-editor-root button", "New Verb") || byText("button", "New Verb"); }
+  function veName() { return document.querySelector("#verb-editor input.input"); }
+  function veNewGroup() { return document.querySelector('#verb-editor input[placeholder="Enter new group name"]'); }
+  function veNounRef() { return document.getElementById("noun-ref"); }
+  function veSave() { return byText("#verb-editor .actions button", "Save Verb"); }
+
+  var VERB_STEPS = [
+    { target: null, placement: "center", title: "Define a verb 🧙",
+      html: "A <b>verb</b> is an action you run on a noun — an intake, a test. Let's define an <b>Intake</b> that produces <b>Sample</b> records." },
+    { target: veProj, placement: "bottom", title: "1 · Project",
+      html: "Same <b>Demo Lab</b> project.",
+      beforeShow: async function () { await waitFor(function () { return optionExists(veProj(), "Demo Lab"); }); setReactValue(veProj(), "Demo Lab"); } },
+    { target: veNewVerbBtn, placement: "bottom", title: "2 · New verb",
+      html: "I'll start a new verb.",
+      beforeShow: async function () { var b = veNewVerbBtn(); if (b) b.click(); await waitFor(function () { return document.getElementById("verb-editor"); }); } },
+    { target: veName, placement: "right", title: "3 · Name it Intake",
+      html: "Name the verb <b>Intake</b>, in a group called <b>Lab Runs</b>.",
+      beforeShow: async function () { await waitFor(veName); setReactValue(veName(), "Intake"); var g = veNewGroup(); if (g) setReactValue(g, "Lab Runs"); } },
+    { target: veNounRef, placement: "top", title: "4 · Acts on Sample",
+      html: "Set what it acts on — the <b>Sample</b> noun. Runs of Intake will produce Sample records.",
+      beforeShow: async function () { await waitFor(function () { return optionExists(veNounRef(), "Sample"); }); setReactValue(veNounRef(), "Sample"); } },
+    { target: function () { return $("#verb-viewer") || $("#verb-editor"); }, placement: "left", title: "5 · Save the verb",
+      html: "And I'll <b>Save</b> it — <b>Intake</b> is now defined and acts on <b>Sample</b>.",
+      beforeShow: async function () { var b = veSave(); if (b) b.click(); await waitFor(function () { return $("#verb-viewer"); }); } },
+    { target: null, placement: "center", title: "Verb ready ✅",
+      html: "<b>Intake</b> is defined. Next: enter a real <b>Sample</b> record for it to operate on." },
+  ];
+
+  // ── noun_workbench (enter data) chapter ──────────────────────────────────────────────────────
+  function nwProj() { return document.getElementById("project-select"); }
+  function nwNoun() { return document.getElementById("nounTypeSelect"); }
+  function nwField(name) { return document.querySelector('#dynamicForm [data-name="' + name + '"]'); }
+  function nwSave() { return document.getElementById("saveBtn"); }
+
+  var ENTER_STEPS = [
+    { target: null, placement: "center", title: "Enter a record 🧙",
+      html: "Now create a real <b>Sample</b> record — the data your verbs operate on." },
+    { target: nwProj, placement: "bottom", title: "1 · Project",
+      html: "<b>Demo Lab</b>.",
+      beforeShow: async function () { await waitFor(function () { return optionExists(nwProj(), "Demo Lab"); }); setReactValue(nwProj(), "Demo Lab"); } },
+    { target: nwNoun, placement: "bottom", title: "2 · Noun type",
+      html: "The <b>Sample</b> noun.",
+      beforeShow: async function () { await waitFor(function () { return optionExists(nwNoun(), "Sample"); }); setReactValue(nwNoun(), "Sample"); await waitFor(function () { return nwField("sample_id"); }); } },
+    { target: function () { return $("#dynamicForm"); }, placement: "top", title: "3 · Fill the form",
+      html: "I'll give it an id and its <b>received</b> + <b>due</b> times.",
+      beforeShow: async function () {
+        await waitFor(function () { return nwField("sample_id"); });
+        setReactValue(nwField("sample_id"), "SPC-100");
+        var now = Date.now();
+        if (nwField("received_at")) setReactValue(nwField("received_at"), localDT(now - 3 * 3600e3));
+        if (nwField("due_at")) setReactValue(nwField("due_at"), localDT(now + 26 * 3600e3));
+      } },
+    { target: nwSave, placement: "top", title: "4 · Save the record",
+      html: "And <b>Save</b> it.",
+      beforeShow: function () { var b = nwSave(); if (b) b.click(); } },
+    { target: null, placement: "center", title: "Record created ✅",
+      html: "A <b>Sample</b> now exists with a received + due time. Last stop: watch its clock tick in the runlog." },
+  ];
+
+  // ── runlog_workbench chapter (the payoff) ─────────────────────────────────────────────────────
+  function rlProj() { return document.getElementById("project-select"); }
+  function rlGroup() { return document.getElementById("verbgroup-select"); }
+  // the run id ("run 001") lives in a HIDDEN column (run_ID / _run_id / primary_id_field), so it's
+  // never in the row's text — target the first clickable row of the run-list GridTable instead.
+  function rlRunRow() { return document.querySelector(".ui-grid tbody tr.clickable"); }
+  function rlDataTab() { return byText(".tab-button", "Data Entry"); }
+
+  var RUNLOG_STEPS = [
+    { target: null, placement: "center", title: "Operate in the runlog 🧙",
+      html: "The <b>runlog</b> is where you run verbs and work the data. Let's open the Intake run and watch the clock tick." },
+    { target: rlProj, placement: "bottom", title: "1 · Project",
+      html: "<b>Demo Lab</b>.",
+      beforeShow: async function () { await waitFor(function () { return optionExists(rlProj(), "Demo Lab"); }); setReactValue(rlProj(), "Demo Lab"); } },
+    { target: rlGroup, placement: "bottom", title: "2 · Verb group",
+      html: "The <b>Lab Runs</b> group.",
+      beforeShow: async function () { await waitFor(function () { return optionExists(rlGroup(), "Lab Runs"); }); setReactValue(rlGroup(), "Lab Runs"); } },
+    { target: rlRunRow, placement: "bottom", title: "3 · Open the run",
+      html: "I'll open <b>run 001</b>.",
+      beforeShow: async function () { var r = await waitFor(rlRunRow); if (r) r.click(); await waitFor(rlDataTab); } },
+    { target: rlDataTab, placement: "bottom", title: "4 · Data Entry",
+      html: "Switch to the <b>Data Entry</b> tab — the editable grid.",
+      beforeShow: async function () { var t = rlDataTab(); if (t) t.click(); await waitFor(function () { return document.querySelector(".rw-grid-host canvas"); }, 6000); } },
+    { target: function () { return $(".rw-grid-host"); }, placement: "top", title: "5 · The live clock ⏱",
+      html: "There's your <b>Sample</b> data — and the <b>hold_clock</b> column ticking live: <i>time since received · time until due</i>. Past-due rows flag <b>OVERDUE</b> in red." },
+    { target: function () { return $(".rw-toolbar .panel-head") || $(".rw-toolbar"); }, placement: "bottom", title: "6 · Verified time",
+      html: "And the clock is <b>NTP-verified</b> (the badge, top-right) — the same trusted time that stamps the audit trail." },
+    { target: null, placement: "center", title: "That's GIMS 🎉",
+      html: "Noun → adjective → verb → data → operate. You built a small lab grammar and watched a time-aware <b>Duration</b> clock tick against verified time. That's the whole loop — thanks for touring!" },
+  ];
+
   // ── chapter registry (steps for later chapters are added as those pages are built) ──────────────
   // Ensure the Adjective chapter works even if you jump straight to it: the Sample noun needs the
   // two datetime fields + a hold_clock field (normally added in the Noun chapter).
@@ -187,6 +279,51 @@
     window.GimsMock.save();
   }
 
+  // For chapters 3-5: the Sample noun should have its datetime fields + hold_clock as a live Duration
+  // adjective (the state after chapter 2). Idempotent, so jumping straight to a later chapter works.
+  function ensureDurationAdjective() {
+    if (!window.GimsMock) return;
+    var s = window.GimsMock.store(), n = s.nouns["Demo Lab"] && s.nouns["Demo Lab"].Sample;
+    if (!n) return;
+    n.fields.received_at = n.fields.received_at || { type: "datetime", required: true };
+    n.fields.due_at = n.fields.due_at || { type: "datetime", required: true };
+    n.fields.hold_clock = { type: "adjective", adjective_class: "Duration" };
+    s.adjectives["Demo Lab"].hold_clock = {
+      adjective: "hold_clock", adjective_class: "Duration", start_field: "received_at", end_field: "due_at",
+      mode: "both", unit: "auto", overdue_style: "negative", applies_to: ["Sample"], "class": "Duration",
+    };
+    window.GimsMock.save();
+  }
+
+  // For chapter 5: ensure the Intake verb + its Lab Runs group/run + a few Sample records exist so the
+  // runlog grid has rows whose hold_clock column ticks (one fresh, one overdue, one sub-minute).
+  function ensureRunlogData() {
+    ensureDurationAdjective();
+    if (!window.GimsMock) return;
+    var s = window.GimsMock.store();
+    s.verbs["Demo Lab"].Intake = s.verbs["Demo Lab"].Intake || {
+      description: "Log a sample into the lab", verb_group: "Lab Runs",
+      data_entry_schema: { instructions: [], raw_data_inputs: [], set_up_inputs: { noun_type_ref: "Sample" }, interpretation: { tabs: [], parsers: [] } },
+      linear_status: { enabled: false, steps: [] }, status_values: [],
+    };
+    s.runs["Demo Lab"]["Lab Runs"] = s.runs["Demo Lab"]["Lab Runs"] || [{ run_ID: "run 001", test_type: "Intake", logged_at: new Date().toISOString() }];
+    s.records["Demo Lab"].Sample = s.records["Demo Lab"].Sample || [];
+    var recs = s.records["Demo Lab"].Sample, have = {};
+    recs.forEach(function (r) { have[r.sample_id] = true; });
+    var now = Date.now(), iso = function (ms) { return new Date(ms).toISOString(); };
+    [{ sample_id: "SPC-001", received_at: iso(now - 3 * 3600e3), due_at: iso(now + 26 * 3600e3) },
+     { sample_id: "SPC-002", received_at: iso(now - 5 * 86400e3), due_at: iso(now - 2 * 3600e3) },
+     { sample_id: "SPC-003", received_at: iso(now - 40e3), due_at: iso(now + 95e3) }
+    ].forEach(function (d) { if (!have[d.sample_id]) recs.push(d); });
+    window.GimsMock.save();
+  }
+
+  // datetime-local input value ("yyyy-mm-ddThh:mm", local) for chapter 4
+  function localDT(ms) {
+    var d = new Date(ms), p = function (n) { return (n < 10 ? "0" : "") + n; };
+    return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate()) + "T" + p(d.getHours()) + ":" + p(d.getMinutes());
+  }
+
   var CHAPTERS = [
     { id: "welcome", page: "welcome",          url: "/index.html",                  label: "Welcome",    built: true,
       desc: "The parts-of-speech idea + how the demo works" },
@@ -194,12 +331,12 @@
       desc: "Define a Sample record type and give it date fields" },
     { id: "adj",     page: "adjective_editor", url: "/pages/adjective_editor.html", label: "Adjective",  built: true, ready: "#project", steps: ADJ_STEPS, setup: ensureSampleFields,
       desc: "Turn hold_clock into a live Duration timer" },
-    { id: "verb",    page: "verb_editor",      url: "/pages/verb_editor.html",      label: "Verb",       built: false,
-      desc: "Define a Test — an action you run on a Sample" },
-    { id: "enter",   page: "noun_workbench",   url: "/pages/noun_workbench.html",   label: "Enter data", built: false,
-      desc: "Create a real Sample record in the grid" },
-    { id: "runlog",  page: "runlog_workbench", url: "/pages/runlog_workbench.html", label: "Runlog",     built: false,
-      desc: "Watch the clock tick + the NTP clock badge" },
+    { id: "verb",    page: "verb_editor",      url: "/pages/verb_editor.html",      label: "Verb",       built: true, ready: "#project",        steps: VERB_STEPS,   setup: ensureDurationAdjective,
+      desc: "Define an Intake verb that acts on Sample" },
+    { id: "enter",   page: "noun_workbench",   url: "/pages/noun_workbench.html",   label: "Enter data", built: true, ready: "#project-select", steps: ENTER_STEPS,  setup: ensureDurationAdjective,
+      desc: "Create a real Sample record (received + due)" },
+    { id: "runlog",  page: "runlog_workbench", url: "/pages/runlog_workbench.html", label: "Runlog",     built: true, ready: "#project-select", steps: RUNLOG_STEPS, setup: ensureRunlogData,
+      desc: "Watch the hold_clock tick + the NTP clock badge" },
   ];
   // exposed so per-page chapter scripts can register their STEPS before the runner starts
   window.GimsChapters = { list: CHAPTERS, helpers: { setReactValue: setReactValue, clickEl: clickEl, byText: byText, optionExists: optionExists, waitFor: waitFor, $: $ } };

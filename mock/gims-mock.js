@@ -50,6 +50,7 @@
   }
   var ok = function (b) { return J(200, b); };
   function dec(s) { try { return decodeURIComponent(s); } catch (e) { return s; } }
+  function nowIso() { return new Date().toISOString(); }
   var TYPE_MAP = { number: "float", string: "string", date: "date", datetime: "datetime", adjective: "adjective" };
 
   // ── routes: {method, re, fn(match, query, body)} ──────────────────────────────────────────────
@@ -156,7 +157,98 @@
     save(); return ok({ status: "demoted" });
   });
 
-  // (verb / noun_workbench / runlog routes are appended below as those chapters are built.)
+  // ---- verb_editor (chapter 3) ----
+  route("GET", /^\/verb\/projects$/, function () { return ok(store.projects); });
+  route("GET", /^\/noun\/valid-refs\/([^/]+)$/, function (m) { return ok({ valid_noun_types: Object.keys(store.nouns[dec(m[1])] || {}) }); });
+  route("GET", /^\/verb\/log-schema\/([^/]+)\/([^/]+)$/, function () { return ok({ primary_id: null, fields: {} }); });
+  route("POST", /^\/verb\/log-schema\/([^/]+)\/([^/]+)$/, function () { return ok({ status: "saved" }); });
+  route("GET", /^\/verb\/([^/]+)$/, function (m) { return ok(store.verbs[dec(m[1])] || {}); });
+  route("GET", /^\/verb\/([^/]+)\/([^/]+)$/, function (m) { var v = (store.verbs[dec(m[1])] || {})[dec(m[2])]; return v ? ok(v) : J(404, { message: "Verb not found" }); });
+  route("PUT", /^\/verb\/([^/]+)\/([^/]+)$/, function (m, q, body) { var p = dec(m[1]); store.verbs[p] = store.verbs[p] || {}; store.verbs[p][dec(m[2])] = body; save(); return ok({ status: "updated", verb: dec(m[2]) }); });
+  route("POST", /^\/verb\/([^/]+)\/([^/]+)$/, function (m, q, body) {
+    var p = dec(m[1]), name = dec(m[2]);
+    store.verbs[p] = store.verbs[p] || {};
+    store.verbs[p][name] = body;
+    var grp = body.verb_group || "Runs";
+    store.runs[p] = store.runs[p] || {};
+    if (!store.runs[p][grp]) store.runs[p][grp] = [{ run_ID: "run 001", test_type: name, logged_at: nowIso() }];
+    save(); return ok({ status: "created", verb: name });
+  });
+
+  // ---- noun_workbench (chapter 4) — prefix /api/noun_workbench ----
+  route("GET", /^\/api\/noun_workbench\/projects$/, function () { return ok(store.projects); });
+  route("GET", /^\/api\/noun_workbench\/([^/]+)$/, function (m) { return ok(Object.keys(store.nouns[dec(m[1])] || {})); });
+  route("GET", /^\/api\/noun_workbench\/([^/]+)\/([^/]+)\/items$/, function (m) { return ok(((store.records[dec(m[1])] || {})[dec(m[2])]) || []); });
+  route("GET", /^\/api\/noun_workbench\/([^/]+)\/([^/]+)\/schema$/, function (m) {
+    var n = (store.nouns[dec(m[1])] || {})[dec(m[2])];
+    if (!n) return J(404, { message: "Noun not found" });
+    return ok({ fields: n.fields, primary_id_field: n.primary_id_field, autogenerate_id: !!n.autogenerate_id });
+  });
+  route("GET", /^\/api\/noun_workbench\/([^/]+)\/([^/]+)\/references\/([^/]+)$/, function () { return ok([]); });
+  route("POST", /^\/api\/noun_workbench\/([^/]+)\/([^/]+)\/validate$/, function () { return ok({ ok: true }); });
+  route("POST", /^\/api\/noun_workbench\/([^/]+)\/([^/]+)\/update\/([^/]+)$/, function (m) { return ok({ ok: true, id: dec(m[3]) }); });
+  route("POST", /^\/api\/noun_workbench\/([^/]+)\/([^/]+)\/create$/, function (m, q, body) {
+    var p = dec(m[1]), nt = dec(m[2]);
+    store.records[p] = store.records[p] || {}; store.records[p][nt] = store.records[p][nt] || [];
+    var n = (store.nouns[p] || {})[nt] || {}, pid = n.primary_id_field || "id";
+    var rec = {}; for (var k in body) if (body[k] !== "") rec[k] = body[k];
+    var id = rec[pid] || (nt.slice(0, 3).toUpperCase() + "-" + (store.records[p][nt].length + 1));
+    rec[pid] = id; store.records[p][nt].push(rec);
+    save(); return ok({ ok: true, id: id });
+  });
+
+  // ---- runlog_workbench + grid + compliance (chapter 5) ----
+  function nounForRun(p, g) {
+    var runs = (store.runs[p] || {})[g] || [], verb = runs[0] && runs[0].test_type;
+    var v = verb && (store.verbs[p] || {})[verb], de = v && v.data_entry_schema;
+    return (de && de.set_up_inputs && de.set_up_inputs.noun_type_ref) || null;
+  }
+  route("GET", /^\/runlog_data_dump\/projects$/, function () { return ok(store.projects); });
+  route("GET", /^\/runlog_data_dump\/verb_groups\/([^/]+)$/, function (m) { return ok(Object.keys(store.runs[dec(m[1])] || {})); });
+  route("GET", /^\/runlog\/([^/]+)\/([^/]+)$/, function (m) {
+    var runs = (store.runs[dec(m[1])] || {})[dec(m[2])] || [];
+    return ok({ headers: ["run_ID", "test_type", "logged_at"], meta: { primary_id_field: "run_ID" },
+      rows: runs.map(function (r) { return [r.run_ID, r.test_type, r.logged_at]; }) });
+  });
+  route("GET", /^\/runlog\/([^/]+)\/([^/]+)\/([^/]+)\/dump$/, function (m) {
+    var runs = (store.runs[dec(m[1])] || {})[dec(m[2])] || [];
+    var run = runs.filter(function (r) { return String(r.run_ID) === dec(m[3]); })[0] || { run_ID: dec(m[3]), test_type: null };
+    return ok({ run_entry: { run_ID: run.run_ID, test_type: run.test_type, verb: run.test_type }, verb: run.test_type, headers: [], rows: [] });
+  });
+  route("GET", /^\/schema\/verb\/([^/]+)\/([^/]+)$/, function (m) {
+    var v = (store.verbs[dec(m[1])] || {})[dec(m[2])] || {}, de = v.data_entry_schema || {};
+    var ref = (de.set_up_inputs && de.set_up_inputs.noun_type_ref) || null;
+    return ok({ data_entry_schema: { set_up_inputs: { noun_type_ref: ref }, noun_type: ref } });
+  });
+  route("GET", /^\/grid\/load\/([^/]+)\/([^/]+)\/([^/]+)$/, function (m) {
+    var p = dec(m[1]), nt = nounForRun(p, dec(m[2]));
+    var rows = nt ? ((store.records[p] || {})[nt] || []) : [];
+    return ok(rows.map(function (r) { return Object.assign({}, r); }));
+  });
+  route("GET", /^\/grid\/noun_info\/([^/]+)\/([^/]+)$/, function (m) {
+    var n = (store.nouns[dec(m[1])] || {})[dec(m[2])] || {}, fields = n.fields || {};
+    return ok({ primary_id: n.primary_id_field || "id", headers_from_schema: Object.keys(fields), autogenerate_id: !!n.autogenerate_id, picture_fields: [] });
+  });
+  route("GET", /^\/grid\/reference_adjectives\/([^/]+)\/([^/]+)$/, function () { return ok({ names: [], detail: {} }); });
+  route("GET", /^\/grid\/duration_adjectives\/([^/]+)\/([^/]+)$/, function (m) {
+    var p = dec(m[1]), nt = dec(m[2]), n = (store.nouns[p] || {})[nt] || {}, fields = n.fields || {}, detail = {};
+    function meta(fn) { var c = fields[fn] || {}; return { type: c.type, format: c.format || null }; }
+    for (var f in fields) {
+      if (fields[f].type === "adjective" && (fields[f].adjective_class || "").toLowerCase() === "duration") {
+        var a = (store.adjectives[p] || {})[f] || {};
+        detail[f] = { start_field: a.start_field, end_field: a.end_field, mode: a.mode || "both", unit: a.unit || "auto", overdue_style: a.overdue_style || "negative", start_meta: meta(a.start_field), end_meta: meta(a.end_field) };
+      }
+    }
+    return ok({ project: p, noun_type: nt, names: Object.keys(detail), detail: detail, server_now: nowIso(),
+      time_status: { synced: true, source: "ntp_validated", offset_seconds: -0.4, note: "Host clock within tolerance of the NTP reference." } });
+  });
+  route("GET", /^\/grid\/retest_options\/([^/]+)\/([^/]+)\/([^/]+)$/, function () { return ok({ options: [] }); });
+  route("GET", /^\/grid\/ref_options\/([^/]+)\/([^/]+)\/([^/]+)$/, function () { return ok({ options: [] }); });
+  route("POST", /^\/grid\/generate_id\/([^/]+)\/([^/]+)$/, function () { return ok({ id: "GEN-" + (Math.random() * 1e4 | 0) }); });
+  route("POST", /^\/gui\/grid\/save\/([^/]+)\/([^/]+)\/([^/]+)$/, function () { return ok({ status: "Save successful" }); });
+  route("GET", /^\/compliance\/time$/, function () {
+    return ok({ now_utc: nowIso(), source: "ntp_validated", synced: true, offset_seconds: -0.4, skew_threshold_seconds: 2, ntp_server: "pool.ntp.org", note: "Host clock within tolerance of the NTP reference." });
+  });
 
   // ── dispatch + fetch override ─────────────────────────────────────────────────────────────────
   function passthrough(pathname) {
