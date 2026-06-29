@@ -76,11 +76,11 @@
 }
 .tour-primary:hover { box-shadow: 0 6px 22px var(--blue-glow, rgba(79, 157, 255, 0.55)); }
 
-/* ── Peek / "view the whole page" — a FIXED pill in the screen's bottom-right corner ─────────────
-   (outside the bubble, so it never crowds the footer). It fades the spotlight + hides the narrator
-   so the visitor sees + scrolls the real page, then resumes. Engine toggles .tour-peeking. */
+/* ── Peek / "view the whole page" — a pill pinned just below the bubble's bottom-right corner
+   (positioned by the engine's _positionPeek; the right/bottom below is only an initial fallback).
+   Fades the spotlight + hides the narrator so the visitor sees + scrolls the real page. */
 .tour-peek {
-  position: fixed; right: 16px; bottom: 16px; z-index: 9100;
+  position: fixed; right: 16px; bottom: 16px; z-index: 9100; pointer-events: auto;
   background: var(--card, #11362a); color: var(--text-mid, #c2d7cd);
   border: 1px solid var(--card-edge, rgba(216, 189, 138, 0.5));
   box-shadow: 0 8px 24px rgba(2, 14, 11, 0.55);

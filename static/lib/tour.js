@@ -156,6 +156,7 @@
     this.elTitle = narr.querySelector(".tour-title");
     this.elText = narr.querySelector(".tour-text");
     this.elProg = narr.querySelector(".tour-progress");
+    this.elBubble = narr.querySelector(".tour-bubble");
     this.btnNext = narr.querySelector(".tour-next");
     this.btnBack = narr.querySelector(".tour-back");
     this.btnSkip = narr.querySelector(".tour-skip");
@@ -179,6 +180,10 @@
     this._onReflow = function () { self._reposition(); };
     window.addEventListener("resize", this._onReflow, { passive: true });
     window.addEventListener("scroll", this._onReflow, { passive: true, capture: true });
+    // re-pin the peek control once the bubble finishes sliding into place
+    narr.addEventListener("transitionend", function (e) {
+      if (e.propertyName === "left" || e.propertyName === "top") self._positionPeek();
+    });
 
     if (this.cfg.keyboard) {
       this._onKey = function (e) {
@@ -290,6 +295,19 @@
         this._placeNarrator(null, "center");
       }
     }
+    this._positionPeek();
+  };
+
+  // Pin the peek control just below the bubble's bottom-right corner (the corner of the textbox,
+  // not the screen). Skipped while peeking — the bubble is hidden then, so the Resume pill stays put.
+  Tour.prototype._positionPeek = function () {
+    if (!this.btnPeek || this.peeking || !this.elBubble) return;
+    var vw = window.innerWidth, vh = window.innerHeight;
+    var b = this.elBubble.getBoundingClientRect();
+    var pw = this.btnPeek.offsetWidth || 92, ph = this.btnPeek.offsetHeight || 32;
+    this.btnPeek.style.right = "auto"; this.btnPeek.style.bottom = "auto";
+    this.btnPeek.style.left = Math.max(6, Math.min(b.right - pw, vw - pw - 6)) + "px";
+    this.btnPeek.style.top = Math.max(6, Math.min(b.bottom + 8, vh - ph - 6)) + "px";
   };
 
   Tour.prototype._frame = function (l, t, w, h, full) {
