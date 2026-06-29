@@ -141,7 +141,6 @@
         '<div class="tour-text"></div>' +
         '<div class="tour-foot">' +
           '<span class="tour-progress"></span>' +
-          '<button type="button" class="tour-btn tour-peek" title="Hide the spotlight to see and scroll the whole page, then resume">View page</button>' +
           '<span class="tour-grow"></span>' +
           '<button type="button" class="tour-btn tour-skip">Skip</button>' +
           '<button type="button" class="tour-btn tour-back">Back</button>' +
@@ -160,7 +159,17 @@
     this.btnNext = narr.querySelector(".tour-next");
     this.btnBack = narr.querySelector(".tour-back");
     this.btnSkip = narr.querySelector(".tour-skip");
-    this.btnPeek = narr.querySelector(".tour-peek");
+
+    // Peek control: a fixed pill in the screen's bottom-right corner (outside the bubble), NOT in
+    // the footer — so it never crowds the nav buttons. Toggles "view the whole page" mode.
+    var peek = document.createElement("button");
+    peek.type = "button";
+    peek.className = "tour-btn tour-peek";
+    peek.title = "Hide the spotlight to see and scroll the whole page, then resume";
+    peek.textContent = "View page";
+    peek.style.zIndex = z + 4;
+    root.appendChild(peek);
+    this.btnPeek = peek;
 
     this.btnNext.addEventListener("click", function () { self.next(); });
     this.btnBack.addEventListener("click", function () { self.back(); });

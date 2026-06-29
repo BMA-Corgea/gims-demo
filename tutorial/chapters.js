@@ -151,13 +151,31 @@
   ];
 
   // ── chapter registry (steps for later chapters are added as those pages are built) ──────────────
+  // Ensure the Adjective chapter works even if you jump straight to it: the Sample noun needs the
+  // two datetime fields + a hold_clock field (normally added in the Noun chapter).
+  function ensureSampleFields() {
+    if (!window.GimsMock) return;
+    var s = window.GimsMock.store(), f = s.nouns["Demo Lab"] && s.nouns["Demo Lab"].Sample && s.nouns["Demo Lab"].Sample.fields;
+    if (!f) return;
+    if (!f.received_at) f.received_at = { type: "datetime", required: true };
+    if (!f.due_at)      f.due_at = { type: "datetime", required: true };
+    if (!f.hold_clock)  f.hold_clock = { type: "string", required: true };
+    window.GimsMock.save();
+  }
+
   var CHAPTERS = [
-    { id: "welcome", page: "welcome",          url: "/index.html",                  label: "Welcome" },
-    { id: "noun",    page: "noun_configure",   url: "/pages/noun_configure.html",   label: "Noun",      ready: ".nc-toolbar .nc-select", steps: NOUN_STEPS },
-    { id: "adj",     page: "adjective_editor", url: "/pages/adjective_editor.html", label: "Adjective", ready: "#project", steps: ADJ_STEPS },
-    { id: "verb",    page: "verb_editor",      url: "/pages/verb_editor.html",      label: "Verb" },
-    { id: "enter",   page: "noun_workbench",   url: "/pages/noun_workbench.html",   label: "Enter data" },
-    { id: "runlog",  page: "runlog_workbench", url: "/pages/runlog_workbench.html", label: "Runlog" },
+    { id: "welcome", page: "welcome",          url: "/index.html",                  label: "Welcome",    built: true,
+      desc: "The parts-of-speech idea + how the demo works" },
+    { id: "noun",    page: "noun_configure",   url: "/pages/noun_configure.html",   label: "Noun",       built: true, ready: ".nc-toolbar .nc-select", steps: NOUN_STEPS,
+      desc: "Define a Sample record type and give it date fields" },
+    { id: "adj",     page: "adjective_editor", url: "/pages/adjective_editor.html", label: "Adjective",  built: true, ready: "#project", steps: ADJ_STEPS, setup: ensureSampleFields,
+      desc: "Turn hold_clock into a live Duration timer" },
+    { id: "verb",    page: "verb_editor",      url: "/pages/verb_editor.html",      label: "Verb",       built: false,
+      desc: "Define a Test — an action you run on a Sample" },
+    { id: "enter",   page: "noun_workbench",   url: "/pages/noun_workbench.html",   label: "Enter data", built: false,
+      desc: "Create a real Sample record in the grid" },
+    { id: "runlog",  page: "runlog_workbench", url: "/pages/runlog_workbench.html", label: "Runlog",     built: false,
+      desc: "Watch the clock tick + the NTP clock badge" },
   ];
   // exposed so per-page chapter scripts can register their STEPS before the runner starts
   window.GimsChapters = { list: CHAPTERS, helpers: { setReactValue: setReactValue, clickEl: clickEl, byText: byText, optionExists: optionExists, waitFor: waitFor, $: $ } };
@@ -175,27 +193,64 @@
       '<span class="demo-dot"></span>' +
       '<span class="demo-text"><b>DEMO</b> — simulated, no backend, resets when you close the tab. Any login works. Not for regulated use.</span>' +
       '<span class="demo-grow"></span>' +
-      '<span class="demo-chip">' + pos + '</span>' +
+      '<button type="button" class="demo-chip demo-chip-btn" id="demoChip" title="Jump to a chapter">' + pos + ' ▾</button>' +
       '<button type="button" class="demo-btn" id="demoReplay" title="Replay this chapter">↻ Replay</button>' +
       '<button type="button" class="demo-btn" id="demoReset" title="Wipe demo data and start over">⟲ Reset</button>';
     document.body.appendChild(bar);
+
+    // chapter picker dropdown
+    var menu = buildChapterMenu(idx);
+    document.body.appendChild(menu);
+    var chip = document.getElementById("demoChip");
+    chip.addEventListener("click", function (e) {
+      e.stopPropagation();
+      var r = chip.getBoundingClientRect();
+      menu.style.left = Math.max(8, Math.min(r.left, window.innerWidth - 312)) + "px";
+      menu.style.top = (r.bottom + 6) + "px";
+      menu.classList.toggle("open");
+    });
+    document.addEventListener("click", function (e) { if (!menu.contains(e.target) && e.target !== chip) menu.classList.remove("open"); });
+
     var rep = document.getElementById("demoReplay");
     if (rep) rep.addEventListener("click", function () { startTour(CHAPTERS[idx]); });
     var rst = document.getElementById("demoReset");
     if (rst) rst.addEventListener("click", function () { if (window.GimsMock) window.GimsMock.reset(); location.href = "/index.html"; });
   }
 
+  function buildChapterMenu(curIdx) {
+    var menu = document.createElement("div");
+    menu.className = "demo-menu";
+    menu.innerHTML = '<div class="demo-menu-head">Jump to a chapter</div>';
+    CHAPTERS.forEach(function (ch, i) {
+      var num = i === 0 ? "✦" : String(i);
+      var tag = ch.built ? "a" : "div";
+      var cls = "demo-menu-item" + (i === curIdx ? " current" : "") + (ch.built ? "" : " disabled");
+      var item = document.createElement(tag);
+      item.className = cls;
+      if (ch.built) item.href = ch.url;
+      item.innerHTML =
+        '<span class="demo-menu-num">' + num + '</span>' +
+        '<span class="demo-menu-body">' +
+          '<span class="demo-menu-name">' + ch.label + (ch.built ? '' : ' <em>· coming soon</em>') + '</span>' +
+          '<span class="demo-menu-desc">' + ch.desc + '</span>' +
+        '</span>';
+      menu.appendChild(item);
+    });
+    return menu;
+  }
+
   // ── tour driver ──────────────────────────────────────────────────────────────────────────────
   function startTour(ch) {
     if (!ch || !ch.steps || !window.Tour) return;
     var idx = CHAPTERS.indexOf(ch);
-    var isLast = idx === CHAPTERS.length - 1;
+    var nxt = CHAPTERS[idx + 1];
+    var hasNext = !!(nxt && nxt.built);   // only advance to a chapter that actually exists
     window.Tour.start({
       storageKey: null,
       narrator: NARRATOR, dim: THEME.dim, ring: THEME.ring,
-      finishLabel: isLast ? "Finish 🎉" : "Next chapter →",
+      finishLabel: hasNext ? "Next chapter →" : "Finish 🎉",
       steps: ch.steps,
-      onFinish: function () { if (!isLast) location.href = CHAPTERS[idx + 1].url; },
+      onFinish: function () { if (hasNext) location.href = nxt.url; },
       onSkip: function () { /* stay on the page so the visitor can explore freely */ },
     });
   }
@@ -205,6 +260,7 @@
     var idx = chapterIndex(page);
     paintBanner(idx);
     var ch = CHAPTERS[idx];
+    if (ch && ch.setup) { try { ch.setup(); } catch (e) {} }   // seed any prerequisites for this chapter
     if (ch && ch.steps) {
       // wait for the React page to be ready, then let the gnome take over
       (ch.ready ? waitFor(function () { return $(ch.ready); }, 8000) : Promise.resolve(true))
