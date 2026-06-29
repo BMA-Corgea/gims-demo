@@ -1,0 +1,42 @@
+name: neutering-guard
+# Fails if real GIMS backend logic ever leaks into this demo. The demo ships ONLY the prebuilt
+# front-end bundles (under static/, vendored UI) + an in-browser mock. No server, no real crypto,
+# no real persistence.
+on: [push, pull_request]
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: No real backend code or server dirs
+        run: |
+          set -e
+          if find . -path ./.git -prune -o -name '*.py' -print | grep -q .; then
+            echo "::error::Python source present — this demo must ship zero backend code."; exit 1; fi
+          for d in api backend server functions nodes core gims_relay; do
+            if [ -d "$d" ]; then echo "::error::Unexpected backend directory: $d/"; exit 1; fi
+          done
+
+      - name: No real backend/crypto/persistence idioms in AUTHORED demo code
+        run: |
+          # The prebuilt GIMS bundles under static/ are vendored UI and are NOT scanned; we scan the
+          # files this repo actually authors (the mock, the tour, the host pages).
+          PATTERN='psycopg|sqlalchemy|fastapi|uvicorn|starlette|boto3|createHmac|crypto\.subtle|subtle\.(sign|verify|digest)|importKey|deriveKey|timingSafeEqual|compute_checksum|GENESIS_PREV_CHECKSUM|hashlib|pbkdf2|bcrypt|scrypt|indexedDB|openDatabase|aws_secret_access|BEGIN [A-Z ]*PRIVATE KEY'
+          if grep -rInE "$PATTERN" index.html pages mock tutorial sync-assets.sh 2>/dev/null; then
+            echo "::error::Forbidden backend/crypto idiom in authored demo code — keep it simulated."; exit 1; fi
+
+      - name: Positive invariants (the demo is still a simulation)
+        run: |
+          grep -qi 'no real backend' mock/gims-mock.js \
+            || { echo "::error::mock no longer declares 'no real backend'"; exit 1; }
+          grep -q 'DEMO' tutorial/chapters.js \
+            || { echo "::error::DEMO disclosure banner missing from the tour"; exit 1; }
+
+      - name: Guard self-integrity
+        run: |
+          G=.github/workflows/neutering-guard.yml
+          for tok in psycopg createHmac compute_checksum indexedDB; do
+            grep -qF "$tok" "$G" || { echo "::error::guard lost a core denylist token: $tok"; exit 1; }
+          done

@@ -1,0 +1,30 @@
+/* demo.css — the loud "this is a simulation" layer + chapter chrome. Additive only. */
+:root { --demo-banner-h: 40px; }
+body { padding-top: var(--demo-banner-h) !important; }
+
+.demo-banner {
+  position: fixed; top: 0; left: 0; right: 0; height: var(--demo-banner-h); z-index: 9000;
+  display: flex; align-items: center; gap: 10px; padding: 0 14px;
+  font: 600 12px/1 system-ui, -apple-system, sans-serif; color: #3a2a05;
+  background: repeating-linear-gradient(135deg, #fbbf24 0 22px, #f6b913 22px 44px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.28); box-shadow: 0 1px 10px rgba(0, 0, 0, 0.25);
+}
+.demo-banner b { font-weight: 800; letter-spacing: 0.3px; }
+.demo-dot {
+  width: 9px; height: 9px; border-radius: 50%; background: #7a1f1f;
+  box-shadow: 0 0 0 3px rgba(122, 31, 31, 0.22); animation: demo-blink 1.8s ease infinite; flex: none;
+}
+@keyframes demo-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.32; } }
+.demo-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.demo-grow { flex: 1 1 auto; }
+.demo-chip {
+  font-weight: 700; padding: 3px 10px; border-radius: 999px;
+  background: rgba(0, 0, 0, 0.13); white-space: nowrap;
+}
+.demo-btn {
+  font: 700 11px/1 system-ui; color: #3a2a05; background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(0, 0, 0, 0.28); border-radius: 999px; padding: 5px 11px; cursor: pointer;
+}
+.demo-btn:hover { background: rgba(255, 255, 255, 0.9); }
+
+@media (max-width: 720px) { .demo-text { display: none; } }

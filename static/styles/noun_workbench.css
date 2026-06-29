@@ -1,0 +1,75 @@
+/* ══════════════════════════════════════════════════════════════
+   Form Workbench (Noun + Verb) — Watery v2 — SHARED stylesheet.
+   Both noun_workbench and verb_workbench link this (they share the same form-CRUD
+   class vocabulary); the orphan verb_workbench.css was removed. Tokens from
+   watery.css + shell.css; bespoke dark :root dropped. JS-bound classes preserved.
+═══════════════════════════════════════════════════════════════ */
+
+/* toolbar / control rows */
+.controls, .top-controls { flex-direction: row; flex-wrap: wrap; align-items: flex-end; gap: 16px; }
+.control-group { min-width: 200px; }
+.inline { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.row { display: flex; }
+.row.gap { gap: 16px; flex-wrap: wrap; align-items: center; }
+.split { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+
+/* segmented toggle (create/edit, bulk-mode) */
+.segmented { display: inline-flex; border: 1px solid var(--border2); border-radius: var(--radius-sm); overflow: hidden; }
+.segmented label { position: relative; display: inline-flex; }
+.segmented input { position: absolute; opacity: 0; pointer-events: none; }
+.segmented span { display: inline-block; padding: 7px 14px; font-size: 12.5px; font-weight: 600; color: var(--text-mid); cursor: pointer; transition: background .15s, color .15s; }
+.segmented label + label span { border-left: 1px solid var(--border2); }
+.segmented input:checked + span { background: var(--blue-light); color: var(--blue-2); }
+.segmented input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+/* form grid */
+.form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+.form-field { display: flex; flex-direction: column; gap: 6px; }
+.form-field label { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.7px; color: var(--text-soft); display: flex; align-items: center; gap: 6px; }
+.required-badge { font-size: 9px; font-weight: 700; color: var(--amber); background: var(--amber-light); border: 1px solid rgba(246,197,96,0.4); border-radius: 99px; padding: 1px 7px; text-transform: uppercase; }
+.form-field .input, .form-field select { width: 100%; }
+.form-field select { padding: 9px 12px; font-size: 13px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); background: var(--surface2); color: var(--text); }
+
+/* messages / inline toasts */
+.messages { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+.messages:empty { display: none; }
+.msg { font-size: 12.5px; padding: 8px 12px; border-radius: var(--radius-sm); background: var(--surface2); color: var(--text-mid); border: 1px solid var(--border); }
+.msg.ok { color: var(--green-text); border-color: rgba(52,224,161,0.4); background: var(--green-light); }
+.msg.warn { color: var(--amber); border-color: rgba(246,197,96,0.4); background: var(--amber-light); }
+.msg.error { color: var(--red-text); border-color: var(--red-border); background: var(--red-light); }
+.legend .msg { background: transparent; border: none; }
+
+/* button variants layered on watery .btn */
+.btn.success { border-color: rgba(52,224,161,0.5); color: var(--green-text); }
+.btn.success:hover:not(:disabled) { border-color: var(--green); color: #fff; background: var(--green-light); box-shadow: 0 3px 14px var(--green-glow); }
+
+/* upload row */
+.upload-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.file-label { cursor: pointer; }
+.file-label:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.file-name { font-size: 12.5px; color: var(--text-soft); }
+#fileInput { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; }
+
+/* chips (legend / inline) */
+.chip.ins { color: var(--green-text); border-color: rgba(52,224,161,0.4); background: var(--green-light); }
+.chip.upd { color: var(--blue-2); border-color: var(--blue-border); background: var(--blue-light); }
+
+/* preview / diff table */
+.table-wrap { overflow-x: auto; }
+.table-wrap table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin-top: 12px; }
+.table-wrap th { text-align: left; padding: 8px 10px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-soft); background: var(--surface); border-bottom: 1px solid var(--card-edge); white-space: nowrap; }
+.table-wrap td { padding: 7px 10px; border-bottom: 1px solid var(--border); color: var(--text-mid); vertical-align: top; }
+.table-wrap tr.valid { } .table-wrap tr.invalid td { background: var(--red-light); }
+.table-wrap tr.action-insert td:nth-child(2) { color: var(--green-text); }
+.table-wrap tr.action-update td:nth-child(2) { color: var(--blue-2); }
+.diff.changed .old { color: var(--text-mute); text-decoration: line-through; }
+.diff.changed .new { color: var(--green-text); }
+.table-wrap pre { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 11px; color: var(--red-text); white-space: pre-wrap; }
+
+/* verb_workbench status-refresh block */
+.kv { display: flex; flex-direction: column; gap: 8px; }
+.kv > label { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.7px; color: var(--text-soft); }
+.small { font-size: 12px; }
+.muted { color: var(--text-soft); }
+
+.hidden { display: none !important; }

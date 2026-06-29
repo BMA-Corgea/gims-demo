@@ -1,0 +1,92 @@
+/* Adjective Editor — Phase 5.2 usability redesign (Watery tokens; no bespoke :root).
+   Master/detail: searchable adjective list + register-new on the left, the selected
+   adjective's component-based editor on the right. */
+
+/* ── toolbar ─────────────────────────────────────────────────── */
+.ae-toolbar { margin-bottom: 16px; }
+.ae-toolbar-row { display: flex; flex-direction: row; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
+.ae-field { min-width: 200px; }
+.ae-refresh { margin-bottom: 1px; }
+.ae-status { margin-left: auto; font-size: 12.5px; color: var(--text-soft); align-self: center; }
+.ae-status[data-kind="ok"] { color: var(--green-text); }
+.ae-status[data-kind="err"] { color: var(--red-text); }
+
+/* ── master/detail grid ──────────────────────────────────────── */
+.ae-main { display: grid; grid-template-columns: minmax(280px, 360px) 1fr; gap: 16px; align-items: start; }
+.ae-list-panel { display: flex; flex-direction: column; max-height: 80vh; }
+.ae-detail-panel { min-height: 60vh; }
+
+/* ── left: search + adjective list ───────────────────────────── */
+.ae-list-search { position: relative; padding: 10px 14px 4px; }
+.ae-search-i { position: absolute; left: 24px; top: 18px; width: 15px; height: 15px; color: var(--text-soft); pointer-events: none; }
+.ae-list-search .input { padding-left: 32px; }
+.ae-list { display: flex; flex-direction: column; gap: 4px; padding: 8px 12px; overflow: auto; flex: 1 1 auto; }
+.ae-adj { all: unset; cursor: pointer; box-sizing: border-box; display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; padding: 9px 12px; border-radius: var(--radius-sm); border: 1px solid transparent; background: var(--surface); }
+.ae-adj:hover { background: var(--accent-light); border-color: var(--card-border); }
+.ae-adj.selected { background: var(--blue-light); border-color: var(--blue-border); }
+.ae-adj:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.ae-adj-name { font-size: 13.5px; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ae-adj.selected .ae-adj-name { color: var(--text); }
+.ae-adj-class { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; padding: 2px 7px; border-radius: 99px;
+  color: var(--accent); background: var(--accent-light); border: 1px solid var(--card-border); white-space: nowrap; flex-shrink: 0; }
+
+/* ── left: register new ──────────────────────────────────────── */
+.ae-register { border-top: 1px solid var(--border); padding: 12px; margin-top: auto; }
+.ae-register:empty { display: none; }
+.ae-register-head { display: flex; align-items: center; gap: 7px; margin-bottom: 8px; }
+.ae-register-icon { display: inline-flex; color: var(--accent); } .ae-register-icon .icon { width: 15px; height: 15px; }
+.ae-register-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-soft); }
+.ae-register-row { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; align-items: center; margin-bottom: 6px; }
+.ae-register-field { font-size: 13px; color: var(--text-mid); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ae-register-class { min-width: 120px; }
+
+/* ── right: detail ───────────────────────────────────────────── */
+.ae-detail { padding: 18px 20px; }
+.ae-detail-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  padding-bottom: 16px; border-bottom: 1px solid var(--border); margin-bottom: 18px; }
+.ae-detail-id { display: flex; align-items: center; gap: 12px; }
+.ae-detail-name { font-size: 19px; font-weight: 700; color: var(--text); margin: 0; }
+.ae-detail-class { font-size: 11px; font-weight: 600; color: var(--accent-2); text-transform: uppercase; letter-spacing: 0.5px; }
+.ae-detail-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.ae-detail-body { display: flex; flex-direction: column; gap: 18px; }
+
+/* ── field cards ─────────────────────────────────────────────── */
+.ae-card { background: var(--surface); border: 1px solid var(--border2); border-radius: var(--radius); padding: 14px 16px; }
+.ae-card-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+.ae-card-title { font-size: 13.5px; font-weight: 700; color: var(--text); }
+.ae-card-hint { font-size: 12px; color: var(--text-soft); flex: 1 1 240px; }
+
+.ae-row { display: flex; align-items: center; gap: 12px; }
+.ae-row-label { font-size: 12px; font-weight: 600; color: var(--text-soft); min-width: 110px; }
+.ae-row .input, .ae-row .select { flex: 1 1 auto; }
+.muted { color: var(--text-soft); }
+.ae-noconfig { font-size: 13px; font-style: italic; }
+.ae-btn-ico { display: inline-flex; } .ae-btn-ico .icon { width: 15px; height: 15px; }
+
+/* ── rule lists (filters, tag options, generic kv) ───────────── */
+.ae-rules { display: flex; flex-direction: column; gap: 8px; }
+.ae-rule { display: flex; align-items: center; gap: 8px; }
+.ae-rule-f { flex: 0 1 160px; min-width: 0; }
+.ae-rule-f.wide { flex: 1 1 220px; }
+.ae-rule-key { flex: 0 0 160px; font-size: 12.5px; font-weight: 600; color: var(--text-soft); font-family: ui-monospace, Menlo, Consolas, monospace;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ae-rule-chk { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-mid); white-space: nowrap; }
+.ae-rule-chk input { accent-color: var(--accent); width: 15px; height: 15px; }
+.ae-rule-del { all: unset; cursor: pointer; display: inline-flex; color: var(--text-soft); border-radius: 5px; padding: 4px; flex-shrink: 0; }
+.ae-rule-del .icon { width: 15px; height: 15px; }
+.ae-rule-del:hover { color: var(--red-text); }
+
+/* ── confirm modal ───────────────────────────────────────────── */
+.ae-confirm-overlay { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center;
+  background: rgba(3, 14, 11, 0.62); backdrop-filter: blur(2px); }
+.ae-confirm { width: min(440px, 92vw); background: var(--card); border: 1px solid var(--card-edge-strong); border-radius: var(--radius-lg);
+  padding: 22px 24px; box-shadow: var(--shadow-lg); }
+.ae-confirm-title { font-size: 16px; font-weight: 700; color: var(--text); margin: 0 0 8px; }
+.ae-confirm-msg { font-size: 13.5px; color: var(--text-mid); line-height: 1.5; margin: 0 0 18px; }
+.ae-confirm-actions { display: flex; justify-content: flex-end; gap: 10px; }
+
+@media (max-width: 900px) {
+  .ae-main { grid-template-columns: 1fr; }
+  .ae-list-panel { max-height: none; }
+}

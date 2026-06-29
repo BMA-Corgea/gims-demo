@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Define a Noun · GIMS Getting Started</title>
+  <link rel="icon" href="/static/images/gnome.png" />
+  <link rel="stylesheet" href="/static/styles/watery.css" />
+  <link rel="stylesheet" href="/static/styles/shell.css" />
+  <link rel="stylesheet" href="/static/styles/components.css" />
+  <link rel="stylesheet" href="/static/styles/noun_configure.css" />
+  <link rel="stylesheet" href="/static/lib/tour.css" />
+  <link rel="stylesheet" href="/tutorial/demo.css" />
+</head>
+<body class="watery-bg is-authed" data-page="noun_configure">
+  <main class="shell-content" id="gims-content">
+    <div id="noun-configure-root"></div>
+  </main>
+  <div id="tooltip" class="tooltip"></div>
+  <div class="toasts" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- mock seam + GIMS stub FIRST (plain script: runs before the deferred bundles) -->
+  <script src="/mock/gims-mock.js"></script>
+  <!-- real GIMS bundles, prebuilt + committed -->
+  <script defer src="/static/lib/vendor.js"></script>
+  <script defer src="/static/lib/noun_configure.js"></script>
+  <script defer src="/static/lib/tour.js"></script>
+  <!-- onboarding banner + gnome chapter tour -->
+  <script defer src="/tutorial/chapters.js"></script>
+</body>
+</html>
